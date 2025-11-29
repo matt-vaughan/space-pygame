@@ -66,10 +66,37 @@ class Laser(Movable):
         return self.traveled < self.ttl    
 
 class Asteroid(Movable):
-    def __init__(self, x, y, rotation, velocity):
-        image = pygame.image.load(os.path.join("assets", "rock.png"))
+    def __init__(self, x, y, rotation, velocity, size):
+        image = None
+        if size == 3:
+            image = pygame.image.load(os.path.join("assets", "bigrock.png"))
+        elif size == 2:
+            image = pygame.image.load(os.path.join("assets", "rock.png"))
+        elif size == 1:
+            image = pygame.image.load(os.path.join("assets", "smallrock.png"))
+        
+        self.size = size
+        
         Movable.__init__(self, x, y, rotation, velocity, [image])
 
+    def spawn_children(self, laser):
+        if self.size == 1:
+            return None, None, None
+        
+        rotation1 = laser.rotation
+        rotation2 = laser.rotation - 45
+        if rotation2 < 0:
+            rotation2 += 360
+        rotation3 = laser.rotation + 45
+        if rotation3 >= 360:
+            rotation3 -= 360
+        
+        return (
+            Asteroid(self.x, self.y, rotation1, self.velocity, self.size-1),
+            Asteroid(self.x, self.y, rotation2, self.velocity, self.size-1),
+            Asteroid(self.x, self.y, rotation3, self.velocity, self.size-1)
+        )
+            
 class Explosion(Movable):
     def __init__(self, x, y):
         images = [
@@ -115,8 +142,8 @@ class Ship(Movable):
         
         if user_input[pygame.K_DOWN]:
             self.velocity -= 1
-            if self.velocity < 0:
-                self.velocity = 0
+            if self.velocity < -7:
+                self.velocity = -7
 
 if __name__=="__main__":
     clock = pygame.time.Clock()
@@ -124,7 +151,7 @@ if __name__=="__main__":
     ship = Ship()
     lasers = []
     explosions = []
-    asteroids = [Asteroid(50,50,10,5), Asteroid(50,150,210,6)]
+    asteroids = [Asteroid(50,50,10,5,3), Asteroid(50,150,210,6,3)]
 
     run = True
     while run:
@@ -141,32 +168,56 @@ if __name__=="__main__":
 
         ship.move()
 
-        # draw stuff to screen
+        # draw background
         SCREEN.blit(BACKGROUND, (0,0))
+        
+        # draw ship
         ship.draw()
+
+        # draw lasers
         for laser in lasers:
             laser.draw()
             laser.move()
             if not laser.still_alive():
                 lasers.remove(laser)
         
+        # draw explosions
         for explosion in explosions:
             explosion.draw()
             if not explosion.still_alive():
                 explosions.remove(explosion)
 
-        for asteroid in asteroids:
+        # draw and move asteroids
+        for i, asteroid in enumerate(asteroids):
             asteroid.draw()
             asteroid.move()
             
+            # action for laser hitting asteroid
             for laser in lasers:
                 if asteroid.collidesWith(laser):
-                    explosions.append(Explosion(asteroid.x, asteroid.y))
+                    lasers.remove(laser)
                     asteroids.remove(asteroid)
 
+                    explosions.append(Explosion(asteroid.x, asteroid.y))
+                    
+                    child1, child2, child3 = asteroid.spawn_children(laser)
+                    if child1 != None:
+                        asteroids.extend( [child1, child2, child3] )
+
+            # check if asteroid collides with ship
             if asteroid.collidesWith(ship):
                 explosions.append(Explosion(ship.x, ship.y))
-                
 
+            """
+            # check if asteroid collides with another asteroid
+            for j, asteroid2 in enumerate(asteroids):
+                if i != j and asteroid.collidesWith(asteroid2):
+                    temp_rot = (asteroid.rotation + asteroid2.rotation) / 2 
+                    asteroid.rotation = temp_rot
+                    asteroid2.rotation = temp_rot + 180
+                    if asteroid2.rotation >= 360:
+                        asteroid2.rotation -= 360
+            """
+            
         clock.tick(30)
         pygame.display.update()
