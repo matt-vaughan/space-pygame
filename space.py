@@ -91,10 +91,12 @@ class Asteroid(Movable):
         if rotation3 >= 360:
             rotation3 -= 360
         
+        cx = self.images[0].get_width() // 2
+        cy = self.images[0].get_height() // 2
         return (
-            Asteroid(self.x, self.y, rotation1, self.velocity, self.size-1),
-            Asteroid(self.x, self.y, rotation2, self.velocity, self.size-1),
-            Asteroid(self.x, self.y, rotation3, self.velocity, self.size-1)
+            Asteroid(self.x - cx, self.y, rotation1, self.velocity, self.size-1),
+            Asteroid(self.x, self.y - cy, rotation2, self.velocity, self.size-1),
+            Asteroid(self.x + cx, self.y, rotation3, self.velocity, self.size-1)
         )
             
 class Explosion(Movable):
@@ -208,16 +210,21 @@ if __name__=="__main__":
             if asteroid.collidesWith(ship):
                 explosions.append(Explosion(ship.x, ship.y))
 
-            """
+            
             # check if asteroid collides with another asteroid
             for j, asteroid2 in enumerate(asteroids):
                 if i != j and asteroid.collidesWith(asteroid2):
-                    temp_rot = (asteroid.rotation + asteroid2.rotation) / 2 
-                    asteroid.rotation = temp_rot
-                    asteroid2.rotation = temp_rot + 180
-                    if asteroid2.rotation >= 360:
-                        asteroid2.rotation -= 360
-            """
-            
+                    opp = asteroid.y - asteroid2.y
+                    adj = asteroid.x - asteroid2.x
+                    
+                    impact_angle = 0
+                    if adj != 0:
+                        impact_angle = math.floor(math.degrees(math.atan2(opp, adj)))
+
+                    asteroid.rotation = -impact_angle + 360
+                    asteroid2.rotation = impact_angle 
+                    asteroid.move()
+                    asteroid2.move()
+
         clock.tick(30)
         pygame.display.update()
