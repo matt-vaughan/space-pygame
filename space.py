@@ -217,14 +217,19 @@ if __name__=="__main__":
                     opp = asteroid.y - asteroid2.y
                     adj = asteroid.x - asteroid2.x
                     
+                    # simplified collisions where mass doens't matter
                     impact_angle = 0
                     if adj != 0:
                         impact_angle = math.floor(math.degrees(math.atan2(opp, adj)))
                     if impact_angle < 0:
                         impact_angle += 360
 
-                    asteroid.rotation = -impact_angle + 360
-                    asteroid2.rotation = impact_angle 
+                    # average the orignial angle and impact angle with twice the weight on the impact angle
+                    # use 180 degress from the impact angle for asteroid, and the impact angle for asteroid 2
+                    asteroid.rotation  = (asteroid.rotation - 2*impact_angle + 2*360) // 3
+                    asteroid2.rotation = (asteroid2.rotation + 2*impact_angle) // 3
+                    
+                    # move the asteroids to prevent double collision detection
                     asteroid.move()
                     asteroid2.move()
 
