@@ -94,8 +94,8 @@ class Asteroid(Movable):
         cx = self.images[0].get_width() // 2
         cy = self.images[0].get_height() // 2
         return (
-            Asteroid(self.x - cx, self.y, rotation1, self.velocity, self.size-1),
-            Asteroid(self.x, self.y - cy, rotation2, self.velocity, self.size-1),
+            Asteroid(self.x, self.y + cy, rotation1, self.velocity, self.size-1),
+            Asteroid(self.x - cx, self.y, rotation2, self.velocity, self.size-1),
             Asteroid(self.x + cx, self.y, rotation3, self.velocity, self.size-1)
         )
             
@@ -153,7 +153,7 @@ if __name__=="__main__":
     ship = Ship()
     lasers = []
     explosions = []
-    asteroids = [Asteroid(50,50,10,5,3), Asteroid(50,150,210,6,3)]
+    asteroids = [Asteroid(50,50,10,4,3), Asteroid(50,150,210,6,3)]
 
     run = True
     while run:
@@ -220,6 +220,8 @@ if __name__=="__main__":
                     impact_angle = 0
                     if adj != 0:
                         impact_angle = math.floor(math.degrees(math.atan2(opp, adj)))
+                    if impact_angle < 0:
+                        impact_angle += 360
 
                     asteroid.rotation = -impact_angle + 360
                     asteroid2.rotation = impact_angle 
