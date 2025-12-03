@@ -19,9 +19,9 @@ class Movable:
         self.traveled = 0
         self.images = images
         self.rect = pygame.Rect(self.x, self.y, images[0].get_width(), images[0].get_height())
-        self.animation_timer = 0
-        self.animation_index = 0
-
+        self.animation_timer = 0    # range 0-5, on 5 animation index increases, increments everytime draw() is called
+        self.animation_index = 0    # provides index into images for animation frames
+        
     def animate(self):
         self.animation_timer += 1
         if self.animation_timer >= 5:
@@ -121,6 +121,12 @@ class Ship(Movable):
     def __init__(self):
         self.image_still = pygame.image.load(os.path.join("assets", "ship.png"))
         self.image_accel = pygame.image.load(os.path.join("assets", "ship_fire.png"))
+        self.shielf_effect = [
+            pygame.image.load(os.path.join("assets","shipshield1.png")),
+            pygame.image.load(os.path.join("assets","shipshield2.png")),
+            pygame.image.load(os.path.join("assets","shipshield3.png")),
+            pygame.image.load(os.path.join("assets","shipshield4.png"))
+        ]
         Movable.__init__(self, 550, 300, 0, 0, [self.image_still])
 
     def input(self, user_input):
@@ -153,7 +159,11 @@ if __name__=="__main__":
     ship = Ship()
     lasers = []
     explosions = []
-    asteroids = [Asteroid(50,50,10,4,3), Asteroid(50,150,210,6,3)]
+    asteroids = [Asteroid(50,50,10,4,3), Asteroid(50,350,210,6,3)]
+
+    points = 0
+
+    font = pygame.font.Font('freesansbold.ttf', 30)
 
     run = True
     while run:
@@ -172,6 +182,12 @@ if __name__=="__main__":
 
         # draw background
         SCREEN.blit(BACKGROUND, (0,0))
+
+        score = font.render("Score: " + str(points), True, (255, 0, 0))
+        scoreRect = score.get_rect()
+        scoreRect.center = (SCREEN_WIDTH - 130, SCREEN_HEIGHT - 30)
+        SCREEN.blit(score, scoreRect)
+
         
         # draw ship
         ship.draw()
@@ -197,6 +213,7 @@ if __name__=="__main__":
             # action for laser hitting asteroid
             for laser in lasers:
                 if asteroid.collidesWith(laser):
+                    points += 5
                     lasers.remove(laser)
                     asteroids.remove(asteroid)
 
@@ -208,6 +225,7 @@ if __name__=="__main__":
 
             # check if asteroid collides with ship
             if asteroid.collidesWith(ship):
+                points -= 1
                 explosions.append(Explosion(ship.x, ship.y))
 
             
